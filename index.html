@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>Prayer in the Dark - Lyrics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        :root {
+            --apple-bg-1: #4a1c40;
+            --apple-bg-2: #1c254a;
+            --apple-bg-3: #7e3a5d;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        /* Animated Background */
+        .ambient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: black;
+            transition: transform 0.1s linear;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            /* transitions removed for high-refresh JS driving */
+            will-change: transform, opacity;
+            /* Hint to browser for optimization */
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 80vw;
+            height: 80vw;
+            background: var(--apple-bg-1);
+        }
+
+        .blob-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 70vw;
+            height: 70vw;
+            background: var(--apple-bg-2);
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 30%;
+            width: 60vw;
+            height: 60vw;
+            background: var(--apple-bg-3);
+        }
+
+        /* Particle Canvas */
+        #particles-canvas {
+            display: none;
+        }
+
+        /* Glassmorphism Overlays */
+        .glass-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(20px);
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Lyrics Container */
+        .lyrics-container {
+            height: calc(100vh - 160px);
+            overflow-y: scroll;
+            padding: 45vh 40px;
+            position: relative;
+            z-index: 10;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .lyrics-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Lyric Lines */
+        .lyric-line {
+            font-size: 2.1rem;
+            font-weight: 800;
+            line-height: 1.4;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.35);
+            opacity: 1;
+            transition: color 0.4s ease, transform 0.4s ease;
+            cursor: pointer;
+            transform-origin: center center;
+            letter-spacing: -0.02em;
+            transform: scale(1);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .lyric-line:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .lyric-line.active {
+            color: #ffffff;
+            opacity: 1;
+            transform: scale(1);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+            margin-bottom: 2rem;
+        }
+
+        .lyric-line.instrumental {
+            font-size: 1.05rem;
+            font-style: italic;
+            opacity: 0.3;
+            font-weight: 400;
+        }
+
+        /* Player Controls */
+        .player-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            height: auto;
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(30px);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            margin-top: -4px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            transition: transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.5);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        /* Progress fill trick */
+        /* Note: Webkit track overflow:hidden clips the shadow which we act as fill */
+        /* Since we want a custom fill, let's use JS to update linear-gradient background */
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+
+        .play-btn-circle {
+            background: white;
+            color: black;
+            border-radius: 50%;
+            padding: 18px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .play-btn-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Track Toggle Switch */
+        .track-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .track-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s ease;
+        }
+
+        .track-label.active {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-switch:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        /* Hide lyrics in instrumental mode */
+        .lyrics-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        @media (max-width: 768px) {
+            .lyric-line {
+                font-size: 1.4rem;
+                text-align: center;
+                margin-bottom: 1.8rem;
+            }
+
+            .lyric-line.active {
+                font-size: 1.54rem;
+                transform: scale(1.05);
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            }
+
+            .lyrics-container {
+                padding: 40vh 20px;
+                height: calc(100vh - 140px);
+                padding-bottom: calc(env(safe-area-inset-bottom) + 160px);
+                mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+                -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            }
+
+            .player-controls {
+                width: calc(100% - 30px);
+                bottom: max(15px, env(safe-area-inset-bottom));
+                /* Safe area support */
+                padding: 12px 16px 12px 16px;
+                padding-bottom: calc(12px + env(safe-area-inset-bottom));
+                border-radius: 20px;
+            }
+
+            /* Larger touch targets for mobile */
+            .control-btn {
+                padding: 12px;
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .play-btn-circle {
+                padding: 16px;
+                min-width: 56px;
+                min-height: 56px;
+            }
+
+            /* Reduce expensive visual effects on mobile */
+            .blob {
+                filter: blur(60px);
+                will-change: transform;
+            }
+
+            .glass-overlay {
+                backdrop-filter: blur(15px);
+            }
+
+            /* Better range slider for touch */
+            input[type=range]::-webkit-slider-thumb {
+                height: 16px;
+                width: 16px;
+                /* Larger for easier touch */
+            }
+
+            /* Optimize instrumental lines */
+            .lyric-line.instrumental {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Extra small phones */
+        @media (max-width: 400px) {
+            .lyric-line {
+                font-size: 1.12rem;
+            }
+
+            .lyric-line.active {
+                font-size: 1.26rem;
+            }
+
+            .lyrics-container {
+                padding: 42vh 10px;
+            }
+
+            .player-controls {
+                padding: 10px 12px;
+                padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            }
+
+            .control-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .play-btn-circle svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        /* Landscape mobile orientation */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .lyrics-container {
+                padding: 30vh 15px;
+                mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+                -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            }
+
+            .lyric-line {
+                font-size: 1.05rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .lyric-line.active {
+                font-size: 1.19rem;
+            }
+
+            .player-controls {
+                padding: 8px 16px;
+                padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+            .blob {
+                filter: blur(60px);
+                transform: none !important;
+            }
+
+            .lyric-line {
+                transition: opacity 0.3s ease;
+                transform: none !important;
+            }
+
+            .lyric-line.active {
+                transform: none !important;
+                text-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="audio-player" src="/WRONG_CROWD.mp3"
+        preload="metadata" crossorigin="anonymous"></audio>
+
+    <div class="ambient-bg" id="visualizer-bg">
+        <div class="blob blob-1" id="blob1"></div>
+        <div class="blob blob-2" id="blob2"></div>
+        <div class="blob blob-3" id="blob3"></div>
+    </div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glass-overlay"></div>
+
+    <div class="lyrics-container" id="lyrics-container"></div>
+
+    <div class="player-controls">
+        <div class="track-toggle-container">
+            <span class="track-label active" id="vocal-label">Vocal</span>
+            <div class="toggle-switch" id="track-toggle">
+                <div class="toggle-slider"></div>
+            </div>
+            <span class="track-label" id="instrumental-label">Instrumental</span>
+        </div>
+
+        <div
+            class="flex items-center justify-between mb-3 text-[10px] text-gray-400 font-semibold tracking-widest uppercase opacity-80">
+            <span id="current-time">0:00</span>
+            <span id="duration">--:--</span>
+        </div>
+
+        <input type="range" id="progress-bar" value="0" step="0.1">
+
+        <div class="flex items-center justify-center gap-10">
+            <button class="control-btn opacity-50 hover:opacity-100" id="skip-back">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 19l-9-7 9-7v14z"></path>
+                    <path d="M5 19h2V5H5v14z"></path>
+                </svg>
+            </button>
+
+            <button id="play-pause-btn" class="control-btn play-btn-circle">
+                <svg id="play-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+                <svg id="pause-icon" class="hidden" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+            </button>
+
+            <button class="control-btn opacity-50 hover:opacity-100" id="skip-forward">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 19l9-7-9-7v14z"></path>
+                    <path d="M19 19h-2V5h2v14z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const lyricData = [
+            { time: 0, text: "•••", type: "instrumental" },
+            { time: 32.0, text: "Summer smoke driftin' off the coast of Bray" },
+            { time: 34.5, text: "Sand in your hair, wishing you could stay" },
+            { time: 37.0, text: "Brown skin glowin' in the Irish grey" },
+            { time: 39.5, text: "Black eyes tellin' me it’s gonna be okay" },
+            { time: 42.0, text: "But then you check the time, got a flight to catch" },
+            { time: 44.5, text: "London calling back, lighting up the match" },
+            { time: 47.0, text: "And my chest goes hollow when you leave the town" },
+            { time: 49.3, text: "I’m up in the clouds, you’re touching down" },
+
+            { time: 53.5, text: "They saw the worst of me, yeah, they always ran" },
+            { time: 56.0, text: "You saw the broken parts and you took my hand" },
+            { time: 59.0, text: "You saw the man inside, yeah, you understood" },
+            { time: 60.9, text: "Changed the bad in me into something good" },
+
+            { time: 65.9, text: "Now I’m sending up a prayer in the dark for you" },
+            { time: 68.5, text: "Hoping that you’re whispering the same words too" },
+            { time: 71.0, text: "It wasn't me and it wasn't you" },
+            { time: 74.0, text: "It was the noise from the crowd and the friends we knew" },
+            { time: 77.6, text: "Yeah, the circle was toxic, the lines got crossed" },
+            { time: 80.0, text: "We paid the price, yeah, look at what it cost" },
+            { time: 83.0, text: "You brought the best out, then you had to go" },
+            { time: 85.5, text: "Kindest soul that I’ll ever know" },
+
+            { time: 93.5, text: "You always put yourself last in the line" },
+            { time: 95.6, text: "Helping everybody else while you’re losing time" },
+            { time: 98.5, text: "Selfless, even when the world was cold" },
+            { time: 101.0, text: "A diamond heart in a story told" },
+            { time: 103.7, text: "But the crew didn't get it, yeah, the vibes were wrong" },
+            { time: 106.0, text: "My friends, your friends, couldn't get along" },
+            { time: 109.0, text: "Should’ve blocked ‘em out, should’ve closed the door" },
+            { time: 111.0, text: "Now I’m starin' at the sea, wanting something more" },
+
+            { time: 114.8, text: "Distance is a killer when the heart is weak" },
+            { time: 120.8, text: "Dublin to London is a heavy peak" },
+            { time: 125.5, text: "I hope you’re happy in the place you are" },
+            { time: 130.5, text: "I know you’re shining like a distant star" },
+
+            { time: 135.0, text: "•••", type: "instrumental" },
+
+            { time: 173.9, text: "Now I’m sending up a prayer in the dark for you" },
+            { time: 176.5, text: "Hoping that you’re whispering the same words too" },
+            { time: 180.0, text: "It wasn't me and it wasn't you" },
+            { time: 181.5, text: "It was the noise from the crowd and the friends we knew" },
+            { time: 185.0, text: "Yeah, the circle was toxic, the lines got crossed" },
+            { time: 188.0, text: "We paid the price, yeah, look at what it cost" },
+            { time: 190.1, text: "You brought the best out, then you had to go" },
+            { time: 192.6, text: "Kindest soul that I’ll ever know" },
+
+            { time: 203.0, text: "Black eyes..." },
+            { time: 205.5, text: "Coastline..." },
+            { time: 210.0, text: "I still pray for you." },
+            { time: 0, text: "" } // End buffer
+        ];
+
+        // --- ELEMENTS ---
+        const audio = document.getElementById('audio-player');
+        const lyricsContainer = document.getElementById('lyrics-container');
+        const playBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const durationEl = document.getElementById('duration');
+        const skipBackBtn = document.getElementById('skip-back');
+        const skipForwardBtn = document.getElementById('skip-forward');
+        const trackToggle = document.getElementById('track-toggle');
+        const vocalLabel = document.getElementById('vocal-label');
+        const instrumentalLabel = document.getElementById('instrumental-label');
+
+        // Visualizer Elements
+        const blob1 = document.getElementById('blob1');
+        const blob2 = document.getElementById('blob2');
+        const blob3 = document.getElementById('blob3');
+        const allBlobs = [blob1, blob2, blob3];
+
+        // --- STATE ---
+        let activeLineIndex = -1;
+        let isUserScrolling = false;
+        let scrollTimeout;
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let isVisualizerActive = false;
+
+        // Audio version state
+        let isInstrumental = false;
+        const vocalVersion = '/WRONG_CROWD.mp3';
+        const instrumentalVersion = '/WRONG_CROWD_INST.mp3';
+
+        // Mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        const isLowEndDevice = isMobile && (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4);
+
+        // --- PARTICLE SYSTEM ---
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animationId;
+
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Particle class
+        class Particle {
+            constructor(type, x, y) {
+                this.type = type; // 'star', 'sparkle', 'wave'
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.life = 1;
+                this.maxLife = 1;
+                this.opacity = Math.random() * 0.5 + 0.3;
+
+                if (type === 'star') {
+                    this.size = Math.random() * 4 + 2;
+                    this.speedY = Math.random() * 0.5 + 0.2;
+                    this.twinkleSpeed = Math.random() * 0.03 + 0.02;
+                    this.twinkle = 0;
+                } else if (type === 'sparkle') {
+                    this.size = Math.random() * 8 + 4;
+                    this.speedX = (Math.random() - 0.5) * 3;
+                    this.speedY = (Math.random() - 0.5) * 3;
+                    this.life = Math.random() * 0.8 + 0.7;
+                    this.maxLife = this.life;
+                    this.decay = 0.01;
+                } else if (type === 'wave') {
+                    this.size = Math.random() * 3 + 1.5;
+                    this.speedX = Math.random() * 2 + 1;
+                    this.amplitude = Math.random() * 50 + 40;
+                    this.frequency = Math.random() * 0.03 + 0.02;
+                    this.phase = Math.random() * Math.PI * 2;
+                    this.baseY = this.y;
+                }
+            }
+
+            update(bassLevel = 0, midLevel = 0) {
+                if (this.type === 'star') {
+                    this.y += this.speedY * (1 + bassLevel * 0.8);
+                    this.twinkle += this.twinkleSpeed;
+                    this.opacity = 0.5 + Math.sin(this.twinkle) * 0.4 + bassLevel * 0.4;
+
+                    if (this.y > canvas.height) {
+                        this.y = -10;
+                        this.x = Math.random() * canvas.width;
+                    }
+                } else if (this.type === 'sparkle') {
+                    this.x += this.speedX * (1 + midLevel);
+                    this.y += this.speedY * (1 + midLevel);
+                    this.life -= this.decay;
+                    this.opacity = this.life / this.maxLife;
+                    this.size += bassLevel * 0.5;
+                } else if (this.type === 'wave') {
+                    this.x += this.speedX * (1 + bassLevel * 0.5);
+                    this.phase += this.frequency;
+                    this.y = this.baseY + Math.sin(this.phase) * this.amplitude * (1 + midLevel * 0.8);
+                    this.opacity = 0.6 + midLevel * 0.5;
+
+                    if (this.x > canvas.width) {
+                        this.x = -10;
+                        this.baseY = Math.random() * canvas.height;
+                        this.y = this.baseY;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+
+                if (this.type === 'star') {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Star glow
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 8);
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, ' + (this.opacity) + ')');
+                    gradient.addColorStop(0.3, 'rgba(255, 255, 255, ' + (this.opacity * 0.6) + ')');
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 8, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'sparkle') {
+                    // Diamond sparkle shape
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - this.size);
+                    ctx.lineTo(this.x + this.size, this.y);
+                    ctx.lineTo(this.x, this.y + this.size);
+                    ctx.lineTo(this.x - this.size, this.y);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Sparkle glow
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 10);
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, ' + (this.opacity) + ')');
+                    gradient.addColorStop(0.2, 'rgba(255, 255, 255, ' + (this.opacity * 0.8) + ')');
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 10, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'wave') {
+                    // Wave particle with trail effect
+                    ctx.fillStyle = 'rgba(135, 206, 250, ' + this.opacity + ')';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Trail
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 12);
+                    gradient.addColorStop(0, 'rgba(135, 206, 250, ' + (this.opacity) + ')');
+                    gradient.addColorStop(0.3, 'rgba(135, 206, 250, ' + (this.opacity * 0.7) + ')');
+                    gradient.addColorStop(1, 'rgba(135, 206, 250, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 12, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            isDead() {
+                return this.type === 'sparkle' && this.life <= 0;
+            }
+        }
+
+        // Initialize particles
+        function initParticles() {
+            const starCount = isLowEndDevice ? 80 : (isMobile ? 150 : 250);
+            const waveCount = isLowEndDevice ? 60 : (isMobile ? 100 : 180);
+
+            // Create stars
+            for (let i = 0; i < starCount; i++) {
+                particles.push(new Particle('star'));
+            }
+
+            // Create waves
+            for (let i = 0; i < waveCount; i++) {
+                particles.push(new Particle('wave'));
+            }
+        }
+
+        // Create sparkles on beat
+        function createSparkles(count, bassLevel) {
+            for (let i = 0; i < count; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                particles.push(new Particle('sparkle', x, y));
+            }
+        }
+
+        let lastBassLevel = 0;
+        let sparkleThreshold = 0.4;
+
+        function animateParticles(bassLevel = 0, midLevel = 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Create sparkles on bass hits
+            if (bassLevel > sparkleThreshold && lastBassLevel <= sparkleThreshold) {
+                const sparkleCount = isLowEndDevice ? 8 : (isMobile ? 15 : 25);
+                createSparkles(sparkleCount, bassLevel);
+            }
+            lastBassLevel = bassLevel;
+
+            // Update and draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update(bassLevel, midLevel);
+                particles[i].draw();
+
+                if (particles[i].isDead()) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // --- AUDIO VISUALIZER SETUP ---
+        function initAudioContext() {
+            if (audioContext) return;
+
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(audio);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                // FFT Size: Lower on mobile for better performance
+                analyser.fftSize = isMobile ? 128 : 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+
+                isVisualizerActive = true;
+                animateVisualizer();
+            } catch (e) {
+                console.error("Web Audio API not supported or blocked", e);
+            }
+        }
+
+        let lastVisualizerUpdate = 0;
+        const visualizerThrottle = isLowEndDevice ? 100 : (isMobile ? 50 : 16); // ms between updates
+
+        function animateVisualizer() {
+            if (!isVisualizerActive) return;
+            requestAnimationFrame(animateVisualizer);
+
+            analyser.getByteFrequencyData(dataArray);
+
+            // Calculate Bass (Low Frequencies)
+            // Adjusted bin counts for mobile (smaller FFT size)
+            const maxBins = isMobile ? 5 : 10;
+            const maxMidBins = isMobile ? 20 : 40;
+
+            let bassSum = 0;
+            let midSum = 0;
+            for (let i = 0; i < maxBins; i++) {
+                bassSum += dataArray[i];
+            }
+            for (let i = maxBins; i < maxMidBins; i++) {
+                midSum += dataArray[i];
+            }
+
+            const bassAvg = bassSum / maxBins;
+            const midAvg = midSum / (maxMidBins - maxBins);
+
+            // Normalized levels for particles (0 to 1)
+            const bassLevel = bassAvg / 255;
+            const midLevel = midAvg / 255;
+
+            // Animate particles with audio data
+            animateParticles(bassLevel, midLevel);
+
+            // Blob animations (throttled)
+            const now = Date.now();
+            if (now - lastVisualizerUpdate < visualizerThrottle) return;
+            lastVisualizerUpdate = now;
+
+            // Reduced scale range on mobile for subtlety and performance
+            const scaleMultiplier = isMobile ? 0.5 : 0.8;
+            const bassScale = 1 + bassLevel * scaleMultiplier;
+            const midScale = 1 + midLevel * (scaleMultiplier * 0.75);
+
+            // Simplified transforms on mobile
+            if (isMobile) {
+                blob1.style.transform = `scale(${bassScale})`;
+                blob2.style.transform = `scale(${bassScale * 0.9})`;
+                blob3.style.transform = `scale(${midScale})`;
+            } else {
+                blob1.style.transform = `scale(${bassScale}) translate(${bassScale * 10}px, ${bassScale * -10}px)`;
+                blob2.style.transform = `scale(${bassScale * 0.9}) translate(${bassScale * -15}px, ${bassScale * 10}px)`;
+                blob3.style.transform = `scale(${midScale}) translate(0px, 0px) rotate(${midScale * 10}deg)`;
+            }
+
+            // Opacity beat (skip on low-end devices)
+            if (!isLowEndDevice) {
+                const opacity = 0.4 + bassLevel * 0.6;
+                blob1.style.opacity = opacity;
+            }
+        }
+
+        // --- INITIALIZATION ---
+        function initLyrics() {
+            lyricsContainer.innerHTML = '';
+            lyricData.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.classList.add('lyric-line');
+                if (line.type === 'instrumental') {
+                    div.classList.add('instrumental');
+                }
+                div.textContent = line.text;
+                div.dataset.index = index;
+                div.dataset.time = line.time;
+
+                // Click to seek
+                div.addEventListener('click', () => {
+                    audio.currentTime = line.time;
+                    audio.play();
+                    updatePlayButton(true);
+                    setActiveLine(index);
+                });
+
+                lyricsContainer.appendChild(div);
+            });
+        }
+
+        // --- SYNC ENGINE ---
+        function setActiveLine(index) {
+            if (index === activeLineIndex) return;
+
+            // Remove old active
+            const prev = document.querySelector('.lyric-line.active');
+            if (prev) prev.classList.remove('active');
+
+            // Add new active
+            const lines = document.querySelectorAll('.lyric-line');
+            if (lines[index]) {
+                const current = lines[index];
+                current.classList.add('active');
+                activeLineIndex = index;
+
+                // Auto Scroll logic
+                if (!isUserScrolling) {
+                    scrollToActiveLine(current);
+                }
+            }
+        }
+
+        function scrollToActiveLine(element) {
+            const containerHeight = lyricsContainer.clientHeight;
+            const elementTop = element.offsetTop;
+            const targetPos = elementTop - (containerHeight * 0.35);
+
+            // Use auto (instant) scroll for smoother, non-choppy performance
+            lyricsContainer.scrollTo({
+                top: targetPos,
+                behavior: 'auto'
+            });
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            const time = audio.currentTime;
+            let newIndex = -1;
+
+            // Optimized search
+            for (let i = 0; i < lyricData.length; i++) {
+                if (lyricData[i].time === 0 && i === lyricData.length - 1) continue; // Skip buffer
+                if (time >= lyricData[i].time) {
+                    newIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            if (newIndex !== -1) {
+                setActiveLine(newIndex);
+            }
+
+            if (audio.duration) {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                progressBar.value = audio.currentTime;
+                // Update track background gradient
+                const val = (progressBar.value - progressBar.min) / (progressBar.max - progressBar.min) * 100;
+                progressBar.style.background = `linear-gradient(to right, white 0%, white ${val}%, rgba(255,255,255,0.15) ${val}%, rgba(255,255,255,0.15) 100%)`;
+
+                updateTimeDisplay(audio.currentTime, audio.duration);
+            }
+        });
+
+        // --- CONTROLS ---
+        function togglePlay() {
+            // Initialize Audio Content on first user gesture
+            initAudioContext();
+
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            if (audio.paused) {
+                audio.play();
+                updatePlayButton(true);
+            } else {
+                audio.pause();
+                updatePlayButton(false);
+            }
+        }
+
+        function updatePlayButton(isPlaying) {
+            if (isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function updateTimeDisplay(current, total) {
+            currentTimeEl.textContent = formatTime(current);
+            if (!isNaN(total)) {
+                durationEl.textContent = formatTime(total);
+            }
+        }
+
+        // Skip buttons
+        skipBackBtn.addEventListener('click', () => {
+            audio.currentTime = Math.max(0, audio.currentTime - 10);
+        });
+
+        skipForwardBtn.addEventListener('click', () => {
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+        });
+
+        // Toggle between vocal and instrumental
+        async function toggleTrack() {
+            const currentTime = audio.currentTime;
+            const wasPlaying = !audio.paused;
+
+            // Pause current playback
+            if (wasPlaying) {
+                audio.pause();
+            }
+
+            isInstrumental = !isInstrumental;
+
+            // Update toggle switch and labels
+            if (isInstrumental) {
+                trackToggle.classList.add('active');
+                vocalLabel.classList.remove('active');
+                instrumentalLabel.classList.add('active');
+                lyricsContainer.classList.add('hidden');
+            } else {
+                trackToggle.classList.remove('active');
+                vocalLabel.classList.add('active');
+                instrumentalLabel.classList.remove('active');
+                lyricsContainer.classList.remove('hidden');
+            }
+
+            // Change source and restore playback
+            audio.src = isInstrumental ? instrumentalVersion : vocalVersion;
+            audio.load();
+
+            // Wait for the audio to be ready
+            try {
+                await new Promise((resolve, reject) => {
+                    const onLoaded = () => {
+                        audio.removeEventListener('loadeddata', onLoaded);
+                        audio.removeEventListener('error', onError);
+                        resolve();
+                    };
+                    const onError = (e) => {
+                        audio.removeEventListener('loadeddata', onLoaded);
+                        audio.removeEventListener('error', onError);
+                        reject(e);
+                    };
+                    audio.addEventListener('loadeddata', onLoaded);
+                    audio.addEventListener('error', onError);
+                });
+
+                // Restore position and play state
+                audio.currentTime = currentTime;
+                progressBar.max = audio.duration;
+                updateTimeDisplay(currentTime, audio.duration);
+
+                if (wasPlaying) {
+                    await audio.play();
+                    updatePlayButton(true);
+                } else {
+                    updatePlayButton(false);
+                }
+            } catch (error) {
+                console.error('Error switching audio version:', error);
+                alert('Could not load ' + (isInstrumental ? 'instrumental' : 'vocal') + ' version. Please check if the file exists.');
+                // Revert the toggle
+                isInstrumental = !isInstrumental;
+                if (isInstrumental) {
+                    trackToggle.classList.add('active');
+                    vocalLabel.classList.remove('active');
+                    instrumentalLabel.classList.add('active');
+                    lyricsContainer.classList.add('hidden');
+                } else {
+                    trackToggle.classList.remove('active');
+                    vocalLabel.classList.add('active');
+                    instrumentalLabel.classList.remove('active');
+                    lyricsContainer.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Event Listeners
+        playBtn.addEventListener('click', togglePlay);
+        trackToggle.addEventListener('click', toggleTrack);
+
+        audio.addEventListener('loadedmetadata', () => {
+            progressBar.max = audio.duration;
+            updateTimeDisplay(0, audio.duration);
+        });
+
+        // Handle iOS audio restrictions
+        audio.addEventListener('play', () => {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        });
+
+        progressBar.addEventListener('input', (e) => {
+            const val = e.target.value;
+            audio.currentTime = val;
+            const percent = (val / audio.duration) * 100;
+            progressBar.style.background = `linear-gradient(to right, white 0%, white ${percent}%, rgba(255,255,255,0.15) ${percent}%, rgba(255,255,255,0.15) 100%)`;
+        }, { passive: true });
+
+        // Detect user scrolling (shorter timeout on mobile for better UX)
+        const scrollResetDelay = isMobile ? 1500 : 2500;
+        lyricsContainer.addEventListener('scroll', () => {
+            isUserScrolling = true;
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                isUserScrolling = false;
+                const active = document.querySelector('.lyric-line.active');
+                if (active) scrollToActiveLine(active);
+            }, scrollResetDelay);
+        }, { passive: true });
+
+        // Prevent pull-to-refresh on mobile
+        document.body.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Improve touch responsiveness
+        if (isMobile) {
+            document.addEventListener('touchstart', () => {}, { passive: true });
+        }
+
+        // --- START ---
+        initLyrics();
+        initParticles();
+
+        // Start particle animation even without audio playing
+        function idleParticleAnimation() {
+            if (!isVisualizerActive) {
+                requestAnimationFrame(idleParticleAnimation);
+                animateParticles(0, 0);
+            }
+        }
+        idleParticleAnimation();
+
+    </script>
+</body>
+
+</html>
